@@ -1,31 +1,4 @@
-const fs = require('fs');
-
-function getDataPath() {
-  return '/tmp/data.json';
-}
-
-function readData() {
-  try {
-    const dataPath = getDataPath();
-    if (fs.existsSync(dataPath)) {
-      const data = fs.readFileSync(dataPath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading data:', error);
-  }
-  return { participants: [] };
-}
-
-function saveData(data) {
-  try {
-    const dataPath = getDataPath();
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error saving data:', error);
-    throw error;
-  }
-}
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -57,7 +30,12 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const data = readData();
+    const store = getStore('participants');
+    const DATA_KEY = 'data';
+    
+    const dataStr = await store.get(DATA_KEY);
+    const data = dataStr ? JSON.parse(dataStr) : { participants: [] };
+    
     const initialLength = data.participants.length;
     data.participants = data.participants.filter(p => p.id !== participantId);
     
@@ -70,7 +48,7 @@ exports.handler = async (event, context) => {
       };
     }
     
-    saveData(data);
+    await store.set(DATA_KEY, JSON.stringify(data));
 
     return {
       statusCode: 200,
@@ -86,4 +64,3 @@ exports.handler = async (event, context) => {
     };
   }
 };
-

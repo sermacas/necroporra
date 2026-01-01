@@ -1,21 +1,4 @@
-const fs = require('fs');
-
-function getDataPath() {
-  return '/tmp/data.json';
-}
-
-function readData() {
-  try {
-    const dataPath = getDataPath();
-    if (fs.existsSync(dataPath)) {
-      const data = fs.readFileSync(dataPath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading data:', error);
-  }
-  return { participants: [] };
-}
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -38,7 +21,12 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const data = readData();
+    const store = getStore('participants');
+    const DATA_KEY = 'data';
+    
+    const dataStr = await store.get(DATA_KEY);
+    const data = dataStr ? JSON.parse(dataStr) : { participants: [] };
+    
     const exists = data.participants.some(p => p.email.toLowerCase() === decodeURIComponent(email).toLowerCase());
 
     return {
@@ -55,4 +43,3 @@ exports.handler = async (event, context) => {
     };
   }
 };
-

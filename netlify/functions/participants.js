@@ -1,41 +1,5 @@
 // Netlify Function para gestionar participantes
-const fs = require('fs');
-const path = require('path');
-
-// Nota: Netlify Functions no pueden escribir archivos persistentes
-// Para producción, deberías usar una base de datos (FaunaDB, MongoDB Atlas, etc.)
-// Por ahora, esto funcionará pero los datos se perderán al reiniciar
-
-// Función auxiliar para obtener ruta del archivo
-function getDataPath() {
-  // En Netlify, usar /tmp que es el único directorio escribible
-  return '/tmp/data.json';
-}
-
-// Leer datos
-function readData() {
-  try {
-    const dataPath = getDataPath();
-    if (fs.existsSync(dataPath)) {
-      const data = fs.readFileSync(dataPath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading data:', error);
-  }
-  return { participants: [] };
-}
-
-// Guardar datos
-function saveData(data) {
-  try {
-    const dataPath = getDataPath();
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error saving data:', error);
-    throw error;
-  }
-}
+const { getStore } = require('@netlify/blobs');
 
 // Validar email
 function validateEmail(email) {
@@ -94,6 +58,32 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    const store = getStore('participants');
+    const DATA_KEY = 'data';
+
+    // Leer datos
+    async function readData() {
+      try {
+        const dataStr = await store.get(DATA_KEY);
+        if (dataStr) {
+          return JSON.parse(dataStr);
+        }
+      } catch (error) {
+        console.error('Error reading data:', error);
+      }
+      return { participants: [] };
+    }
+
+    // Guardar datos
+    async function saveData(data) {
+      try {
+        await store.set(DATA_KEY, JSON.stringify(data));
+      } catch (error) {
+        console.error('Error saving data:', error);
+        throw error;
+      }
+    }
+
     // POST: Crear participante
     if (event.httpMethod === 'POST') {
       const { name, email, characters } = JSON.parse(event.body || '{}');
@@ -114,7 +104,7 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const data = readData();
+      const data = await readData();
       const emailExists = data.participants.some(p => p.email.toLowerCase() === email.toLowerCase().trim());
       
       if (emailExists) {
@@ -143,7 +133,7 @@ exports.handler = async (event, context) => {
       };
 
       data.participants.push(newParticipant);
-      saveData(data);
+      await saveData(data);
 
       return {
         statusCode: 200,
@@ -154,19 +144,13 @@ exports.handler = async (event, context) => {
 
     // GET: Obtener participantes (no se usa, pero por compatibilidad)
     if (event.httpMethod === 'GET') {
-      const data = readData();
+      const data = await readData();
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify(data.participants),
       };
     }
-
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Método no permitido' }),
-    };
 
     return {
       statusCode: 405,
@@ -182,4 +166,3 @@ exports.handler = async (event, context) => {
     };
   }
 };
-
