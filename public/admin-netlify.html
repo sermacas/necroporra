@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Necroporra 2026 (Netlify)</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        }
+        .password-form {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        .password-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .participant-email {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .netlify-info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="admin-header">
+            <h1>🔐 Panel Admin (Netlify)</h1>
+            <p class="subtitle">Gestión de listas - Necroporra 2026</p>
+        </header>
+
+        <div id="password-section" class="tab-content active">
+            <div class="password-form">
+                <div class="netlify-info">
+                    <strong>📡 Conectado a Netlify</strong><br>
+                    <small id="netlify-url">https://necroporra2026.netlify.app</small>
+                </div>
+                <h2 style="margin-bottom: 20px; text-align: center;">Acceso Administrador</h2>
+                <input type="password" id="admin-password" class="password-input" placeholder="Contraseña de administrador">
+                <button class="password-btn" onclick="checkPassword()">Acceder</button>
+                <div id="password-error" style="color: red; margin-top: 10px; display: none;"></div>
+            </div>
+        </div>
+
+        <section id="admin-section" class="tab-content" style="display: none;">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-count">0</div>
+                    <div class="stat-label">Total Listas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="recent-count">0</div>
+                    <div class="stat-label">Últimas 24h</div>
+                </div>
+            </div>
+
+            <div id="participants-container">
+                <p class="loading">Cargando listas...</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Cambiar esta URL por tu URL de Netlify
+        const NETLIFY_URL = 'https://necroporra2026.netlify.app';
+        const API_URL = NETLIFY_URL;
+        let adminPassword = '';
+
+        document.getElementById('netlify-url').textContent = NETLIFY_URL;
+
+        function checkPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (!password) {
+                showPasswordError('Por favor, ingresa la contraseña');
+                return;
+            }
+            adminPassword = password;
+            loadParticipants();
+        }
+
+        function showPasswordError(message) {
+            const errorDiv = document.getElementById('password-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        async function loadParticipants() {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/participants?password=${encodeURIComponent(adminPassword)}`);
+                
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({ error: 'Error al procesar la respuesta' }));
+                    showPasswordError(data.error || 'Contraseña incorrecta');
+                    document.getElementById('password-section').style.display = 'block';
+                    document.getElementById('admin-section').style.display = 'none';
+                    return;
+                }
+
+                const participants = await response.json();
+                
+                document.getElementById('password-section').style.display = 'none';
+                document.getElementById('admin-section').style.display = 'block';
+                
+                // Actualizar estadísticas
+                document.getElementById('total-count').textContent = participants.length;
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const recentCount = participants.filter(p => new Date(p.createdAt) > yesterday).length;
+                document.getElementById('recent-count').textContent = recentCount;
+
+                const container = document.getElementById('participants-container');
+
+                if (participants.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>📝 No hay listas todavía</h3>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                participants.forEach(participant => {
+                    const card = document.createElement('div');
+                    card.className = 'participant-card';
+                    
+                    const category1 = participant.characters.filter(char => {
+                        return char.age >= 84 || char.terminal === true;
+                    });
+                    
+                    const category2 = participant.characters.filter(char => {
+                        return char.age < 84 && char.terminal !== true;
+                    });
+
+                    card.innerHTML = `
+                        <div class="participant-header">
+                            <div>
+                                <div class="participant-name">${escapeHtml(participant.name)}</div>
+                                <div class="participant-email">${escapeHtml(participant.email)}</div>
+                                <div class="participant-email" style="font-size: 0.8rem; margin-top: 5px;">
+                                    ${new Date(participant.createdAt).toLocaleString('es-ES')}
+                                </div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteParticipant('${participant.id}')">Eliminar</button>
+                        </div>
+                        <div class="characters-grid">
+                            ${category1.map(char => `
+                                <div class="character-card">
+                                    <div class="character-info">
+                                        <div class="character-name">${escapeHtml(char.name)}</div>
+                                        <div class="character-details">
+                                            ${char.age} años${char.terminal ? ' • Terminal' : ''}
+                                        </div>
+                                    </div>
+                                    <span class="character-badge badge-category1">84+ o Terminal</span>
+                                </div>
+                            `).join('')}
+                            ${category2.map(char => `
+                                <div class="character-card">
+                                    <div class="character-info">
+                                        <div class="character-name">${escapeHtml(char.name)}</div>
+                                        <div class="character-details">
+                                            ${char.age} años • No terminal
+                                        </div>
+                                    </div>
+                                    <span class="character-badge badge-category2"><84 años</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                showPasswordError('Error de conexión. Verifica que la URL de Netlify sea correcta.');
+                document.getElementById('password-section').style.display = 'block';
+                document.getElementById('admin-section').style.display = 'none';
+                console.error('Error:', error);
+            }
+        }
+
+        async function deleteParticipant(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta lista?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/participants/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadParticipants();
+                } else {
+                    alert('Error al eliminar la lista');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+                console.error(error);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Permitir Enter para enviar contraseña
+        document.getElementById('admin-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    </script>
+</body>
+</html>
+
