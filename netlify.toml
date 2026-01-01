@@ -8,9 +8,8 @@
 
 [[redirects]]
   from = "/api/participants/:id"
-  to = "/.netlify/functions/delete-participant"
+  to = "/.netlify/functions/delete-participant?id=:id"
   status = 200
-  force = true
 
 [[redirects]]
   from = "/api/participants"
@@ -25,6 +24,11 @@
 [[redirects]]
   from = "/api/admin/participants"
   to = "/.netlify/functions/admin-participants"
+  status = 200
+
+[[redirects]]
+  from = "/api/data"
+  to = "/.netlify/functions/get-data"
   status = 200
 
 [[redirects]]

@@ -39,11 +39,17 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // El ID viene en el path, necesitamos parsearlo de la URL
-    const pathParts = event.path.split('/');
-    const id = pathParts[pathParts.length - 1];
+    // El ID viene como query parameter o en el path
+    const { id } = event.queryStringParameters || {};
+    let participantId = id;
     
-    if (!id) {
+    // Si no está en query, intentar parsearlo del path
+    if (!participantId) {
+      const pathMatch = event.path.match(/participants\/([^\/]+)/);
+      participantId = pathMatch ? pathMatch[1] : null;
+    }
+    
+    if (!participantId) {
       return {
         statusCode: 400,
         headers,
@@ -52,7 +58,18 @@ exports.handler = async (event, context) => {
     }
 
     const data = readData();
-    data.participants = data.participants.filter(p => p.id !== id);
+    const initialLength = data.participants.length;
+    data.participants = data.participants.filter(p => p.id !== participantId);
+    
+    // Verificar que se eliminó algo
+    if (data.participants.length === initialLength) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: 'Participante no encontrado' }),
+      };
+    }
+    
     saveData(data);
 
     return {
