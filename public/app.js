@@ -323,5 +323,196 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ========== FUNCIONALIDAD ADMIN ==========
+
+let isAdminLoggedIn = false;
+let adminPassword = '';
+
+function toggleAdminLogin() {
+    const modal = document.getElementById('admin-login-modal');
+    if (isAdminLoggedIn) {
+        showAdminSection();
+    } else {
+        modal.style.display = 'flex';
+        document.getElementById('admin-password-input').focus();
+    }
+}
+
+function closeAdminLogin() {
+    document.getElementById('admin-login-modal').style.display = 'none';
+    document.getElementById('admin-password-input').value = '';
+    document.getElementById('admin-login-error').style.display = 'none';
+}
+
+async function loginAsAdmin() {
+    const password = document.getElementById('admin-password-input').value;
+    const errorDiv = document.getElementById('admin-login-error');
+    
+    if (!password) {
+        errorDiv.textContent = 'Por favor, ingresa la contraseña';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/admin/participants?password=${encodeURIComponent(password)}`);
+        
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({ error: 'Error al procesar la respuesta' }));
+            errorDiv.textContent = data.error || 'Contraseña incorrecta';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Login exitoso
+        adminPassword = password;
+        isAdminLoggedIn = true;
+        closeAdminLogin();
+        showAdminSection();
+        loadAdminParticipants();
+        
+    } catch (error) {
+        errorDiv.textContent = 'Error de conexión. Por favor, intenta de nuevo.';
+        errorDiv.style.display = 'block';
+        console.error('Error:', error);
+    }
+}
+
+function logoutAdmin() {
+    isAdminLoggedIn = false;
+    adminPassword = '';
+    document.getElementById('form-section').style.display = 'block';
+    document.getElementById('admin-section').style.display = 'none';
+}
+
+function showAdminSection() {
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('admin-section').style.display = 'block';
+}
+
+async function loadAdminParticipants() {
+    const container = document.getElementById('admin-participants-container');
+    container.innerHTML = '<p class="loading">Cargando listas...</p>';
+
+    try {
+        const response = await fetch(`${API_URL}/api/admin/participants?password=${encodeURIComponent(adminPassword)}`);
+        
+        if (!response.ok) {
+            container.innerHTML = '<p class="loading" style="color: red;">Error al cargar las listas</p>';
+            return;
+        }
+
+        const participants = await response.json();
+        
+        // Actualizar estadísticas
+        document.getElementById('total-count').textContent = participants.length;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const recentCount = participants.filter(p => new Date(p.createdAt) > yesterday).length;
+        document.getElementById('recent-count').textContent = recentCount;
+
+        if (participants.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>📝 No hay listas todavía</h3>
+                    <p>Aún no se han enviado listas</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '';
+
+        participants.forEach(participant => {
+            const card = document.createElement('div');
+            card.className = 'participant-card';
+            
+            const category1 = participant.characters.filter(char => {
+                return char.age >= 84 || char.terminal === true;
+            });
+            
+            const category2 = participant.characters.filter(char => {
+                return char.age < 84 && char.terminal !== true;
+            });
+
+            card.innerHTML = `
+                <div class="participant-header">
+                    <div>
+                        <div class="participant-name">${escapeHtml(participant.name)}</div>
+                        <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">${escapeHtml(participant.email)}</div>
+                        <div style="color: #666; font-size: 0.8rem; margin-top: 5px;">
+                            ${new Date(participant.createdAt).toLocaleString('es-ES')}
+                        </div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteAdminParticipant('${participant.id}')">Eliminar</button>
+                </div>
+                <div class="characters-grid">
+                    ${category1.map(char => `
+                        <div class="character-card">
+                            <div class="character-info">
+                                <div class="character-name">${escapeHtml(char.name)}</div>
+                                <div class="character-details">
+                                    ${char.age} años${char.terminal ? ' • Terminal' : ''}
+                                </div>
+                            </div>
+                            <span class="character-badge badge-category1">84+ o Terminal</span>
+                        </div>
+                    `).join('')}
+                    ${category2.map(char => `
+                        <div class="character-card">
+                            <div class="character-info">
+                                <div class="character-name">${escapeHtml(char.name)}</div>
+                                <div class="character-details">
+                                    ${char.age} años • No terminal
+                                </div>
+                            </div>
+                            <span class="character-badge badge-category2"><84 años</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+        container.innerHTML = '<p class="loading" style="color: red;">Error al cargar las listas</p>';
+        console.error('Error:', error);
+    }
+}
+
+async function deleteAdminParticipant(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta lista?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/participants/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            loadAdminParticipants();
+        } else {
+            alert('Error al eliminar la lista');
+        }
+    } catch (error) {
+        alert('Error de conexión');
+        console.error(error);
+    }
+}
+
+// Permitir Enter en el input de contraseña
+document.addEventListener('DOMContentLoaded', () => {
+    const passwordInput = document.getElementById('admin-password-input');
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginAsAdmin();
+            }
+        });
+    }
+});
+
 // Inicializar
 initForm();
