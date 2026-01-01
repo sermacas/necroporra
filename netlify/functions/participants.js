@@ -58,6 +58,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Netlify Blobs con contexto automático
     const store = getStore('participants');
     const DATA_KEY = 'data';
 
@@ -162,7 +163,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Error interno del servidor' }),
+      body: JSON.stringify({ error: 'Error interno del servidor: ' + error.message }),
     };
   }
 };
