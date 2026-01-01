@@ -1,11 +1,31 @@
-# ⚠️ NOTA: Netlify NO es ideal para servidores Express completos
-# Este proyecto necesita un servidor corriendo 24/7
-# Mejor opción: Railway o Render (ver NETLIFY.md)
-
-# Configuración básica (no funcionará para servidor Express completo)
 [build]
   command = "npm install"
   publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/participants/:id"
+  to = "/.netlify/functions/delete-participant"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/participants"
+  to = "/.netlify/functions/participants"
+  status = 200
+
+[[redirects]]
+  from = "/api/check-email/:email"
+  to = "/.netlify/functions/check-email/:email"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/participants"
+  to = "/.netlify/functions/admin-participants"
+  status = 200
 
 [[redirects]]
   from = "/*"
@@ -14,9 +34,4 @@
 
 [build.environment]
   NODE_VERSION = "18"
-
-# Para usar Netlify, necesitarías convertir las APIs a Functions
-# [functions]
-#   node_bundler = "esbuild"
-#   directory = "netlify/functions"
 
