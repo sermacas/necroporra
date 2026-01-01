@@ -1,0 +1,22 @@
+# ⚠️ NOTA: Netlify NO es ideal para servidores Express completos
+# Este proyecto necesita un servidor corriendo 24/7
+# Mejor opción: Railway o Render (ver NETLIFY.md)
+
+# Configuración básica (no funcionará para servidor Express completo)
+[build]
+  command = "npm install"
+  publish = "public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Para usar Netlify, necesitarías convertir las APIs a Functions
+# [functions]
+#   node_bundler = "esbuild"
+#   directory = "netlify/functions"
+

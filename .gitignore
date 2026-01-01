@@ -2,4 +2,10 @@ node_modules/
 data.json
 .DS_Store
 *.log
+.env
+.env.local
+*.zip
+dist/
+build/
+.netlify/
 
