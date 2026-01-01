@@ -53,6 +53,8 @@ header::before {
     height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
     animation: pulse 4s ease-in-out infinite;
+    z-index: 0;
+    pointer-events: none;
 }
 
 @keyframes pulse {
