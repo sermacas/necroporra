@@ -40,7 +40,8 @@ header {
     padding: 40px 20px;
     text-align: center;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 1;
 }
 
 header::before {
