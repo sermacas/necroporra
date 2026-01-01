@@ -1,0 +1,62 @@
+{
+  "participants": [
+    {
+      "id": "1767269833533",
+      "name": "Sergio",
+      "email": "sergiomcastro2003@gmail.com",
+      "characters": [
+        {
+          "name": "Noam Chomsky",
+          "age": 97,
+          "terminal": false
+        },
+        {
+          "name": "Jordi Pujol",
+          "age": 95,
+          "terminal": false
+        },
+        {
+          "name": "Antonio Tejero",
+          "age": 93,
+          "terminal": false
+        },
+        {
+          "name": "Fariseño no tampoco",
+          "age": 97,
+          "terminal": false
+        },
+        {
+          "name": "Unzué",
+          "age": 58,
+          "terminal": true
+        },
+        {
+          "name": "Joe Biden",
+          "age": 83,
+          "terminal": false
+        },
+        {
+          "name": "King Charles III",
+          "age": 77,
+          "terminal": false
+        },
+        {
+          "name": "Dueño del Lucas",
+          "age": 67,
+          "terminal": false
+        },
+        {
+          "name": "Rony Coleman",
+          "age": 61,
+          "terminal": false
+        },
+        {
+          "name": "Jason Collins",
+          "age": 47,
+          "terminal": false
+        }
+      ],
+      "createdAt": "2026-01-01T12:17:13.533Z"
+    }
+  ]
+}
