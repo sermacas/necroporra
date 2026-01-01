@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Necroporra 2026</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Necroporra 2026</h1>
+            <p class="subtitle">Añade tu lista de 10 personajes</p>
+        </header>
+
+        <!-- Formulario -->
+        <section id="form-section" class="tab-content active">
+            <form id="participant-form">
+                <div class="form-group">
+                    <label for="participant-name">Tu nombre:</label>
+                    <input type="text" id="participant-name" required placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="form-group">
+                    <label for="participant-email">Tu correo electrónico:</label>
+                    <input type="email" id="participant-email" required placeholder="Ej: juan@email.com">
+                    <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">
+                        ⚠️ Solo puedes enviar una lista por correo electrónico
+                    </small>
+                </div>
+
+                <div class="characters-container">
+                    <h3>10 Personajes Famosos</h3>
+                    <div id="characters-list"></div>
+                    <p class="rules-info">
+                        📋 <strong>Reglas:</strong><br>
+                        • Todos deben ser menores de 100 años<br>
+                        • 5 deben tener 84+ años O ser terminales<br>
+                        • 5 deben tener menos de 84 años Y NO ser terminales
+                    </p>
+                </div>
+
+                <div id="validation-message" class="validation-message"></div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">Guardar Lista</button>
+            </form>
+
+            <div id="success-screen" class="success-screen" style="display: none;">
+                <h2>✅ ¡Lista enviada correctamente!</h2>
+                <p style="margin-bottom: 30px;">Tu lista ha sido guardada. El administrador podrá verificar que se recibió correctamente.</p>
+                
+                <div id="review-list" style="margin-top: 30px;">
+                    <!-- La lista se mostrará aquí -->
+                </div>
+
+                <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="window.print()" style="padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                        Imprimir/Guardar
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
